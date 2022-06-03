@@ -1,0 +1,25 @@
+{
+  "name": "unh_bootcamp-12-employee_tracker",
+  "version": "1.0.0",
+  "description": "track employees",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JohnSauter/UNH_Bootcamp-12-Employee_Tracker.git"
+  },
+  "author": "John Sauter",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/JohnSauter/UNH_Bootcamp-12-Employee_Tracker/issues"
+  },
+  "homepage": "https://github.com/JohnSauter/UNH_Bootcamp-12-Employee_Tracker#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^8.2.4",
+    "mysql2": "^2.3.3"
+  }
+}
