@@ -4,10 +4,22 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const console_table = require("console.table");
-//const generate_markdown = require("./utils/generateMarkdown.js");
-// const fs = require("fs");
 
-/* Ask the user which procedure he wishes to follow.  */
+/* Connect to the database.  */
+const db = mysql.createConnection(
+    {
+      host: 'localhost',
+      // MySQL username,
+      user: 'John_',
+      // MySQL password
+      password: '',
+      database: 'employee_tracker_db'
+    },
+    console.log(`Connected to the employee_tracker_db database.`)
+);
+
+/* Ask the user which procedure he wishes to follow.  
+ * We come back here after each procedure.  */
 
 function top_level_choice() {
 
@@ -40,7 +52,8 @@ function process_choice_answer(answer) {
     
     /* All of the cases are asynchronous and call
      * top_level_choice when they are done, except
-     * exit, which does not and therefore just exits.
+     * exit, which does not and therefore just 
+     * closes the database connection and exits.
      */
     switch (answer.choice) {
         case "view all departments":
@@ -69,6 +82,7 @@ function process_choice_answer(answer) {
         default:
             break;
     }
+    db.end();
 }
 
 /* Respond to the user's choice of procedure.  */
