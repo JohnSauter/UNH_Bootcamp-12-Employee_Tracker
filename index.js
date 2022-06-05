@@ -61,10 +61,10 @@ function process_choice_answer(answer) {
         case "view all departments":
             do_view_all_departments();
             break;
-        case "view_all_roles":
+        case "view all roles":
             do_view_all_roles();
             break;
-        case "view_all_employees":
+        case "view all employees":
             do_view_all_employees();
             break;
         case "add a department":
@@ -94,7 +94,7 @@ function process_choice_answer(answer) {
 /* Respond to the user's choice of procedure.  */
 function do_view_all_departments() {
     /* select * from department;  */
-    db.query("select * from department",
+    db.query("select * from department;",
         function (err, results) {
             if (err) { throw err; };
             console.table(results);
@@ -104,7 +104,19 @@ function do_view_all_departments() {
 }
 
 function do_view_all_roles() {
-    top_level_choice();
+    /* select title as "job title", role.id as "role id", 
+     * department.name as "department name", salary from role 
+     * join department on role.department_id = department.id;
+     */
+    db.query("select title as 'job title', role.id as 'role id', " +
+        "department.name as 'department name', salary from role " +
+        "join department on role.department_id = department.id;",
+        function (err, results) {
+            if (err) { throw err; };
+            console.table(results);
+            top_level_choice();
+        }
+    )
 }
 
 function do_view_all_employees() {
