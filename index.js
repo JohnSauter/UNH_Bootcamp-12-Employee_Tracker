@@ -120,20 +120,6 @@ function do_view_all_roles() {
 }
 
 function do_view_all_employees() {
-    /* select employee.id as "employee id", 
-     * employee.first_name as "first name", 
-     * employee.last_name as "last name", 
-     * role.title as "job title",
-     * department.name as "department", 
-     * role.salary as salary,
-     * concat (manager.first_name, space(1), manager.last_name)
-     *  as "manager name"
-     * from employee 
-     * join role on employee.role_id = role.id
-     * join department on role.department_id = department.id
-     * left join employee as manager 
-     *  on employee.manager_id = manager.id;
-     */
     const SQL_query = 
         "select employee.id as 'employee id', " + 
         "employee.first_name as 'first name', " +
