@@ -120,8 +120,8 @@ function do_view_all_roles() {
 }
 
 function do_view_all_employees() {
-    const SQL_query = 
-        "select employee.id as 'employee id', " + 
+    const SQL_query =
+        "select employee.id as 'employee id', " +
         "employee.first_name as 'first name', " +
         "employee.last_name as 'last name', " +
         "role.title as 'job title', " +
@@ -144,18 +144,46 @@ function do_view_all_employees() {
 };
 
 function do_add_a_department() {
-    top_level_choice();
+    /* Ask the user for the name of the department  */
+    const department_name_question = [
+        {
+            type: "input",
+            name: "department_name",
+            message: "What is the name of the department?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(department_name_question)
+        .then(process_department_name_answer);
+}
+
+function process_department_name_answer(answer) {
+    const department_name = answer.department_name;
+    /* insert into department (name) 
+     * values ("<department_name>"); */
+    const quotation_mark = RegExp("'", "g");
+    const safe_department_name = department_name.replace(quotation_mark, "''");
+    const SQL_query = "insert into department (name)" +
+        " values ('" + safe_department_name + "');";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log ("Department " + department_name +
+                " added.");
+            top_level_choice();
+        }
+    )
 }
 
 function do_add_a_role() {
-    top_level_choice();
-}
+            top_level_choice();
+        }
 
 function do_add_an_employee() {
-    top_level_choice();
-}
+            top_level_choice();
+        }
 
 function do_update_an_employee_role() {
-    top_level_choice();
-}
+            top_level_choice();
+        }
 top_level_choice();
