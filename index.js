@@ -93,8 +93,9 @@ function process_choice_answer(answer) {
 
 /* Respond to the user's choice of procedure.  */
 function do_view_all_departments() {
-    /* select * from department;  */
-    db.query("select * from department;",
+    const SQL_statement = "select * from department " +
+        "order by id;";
+    db.query(SQL_statement,
         function (err, results) {
             if (err) { throw err; };
             console.table(results);
@@ -108,9 +109,12 @@ function do_view_all_roles() {
      * department.name as "department name", salary from role 
      * join department on role.department_id = department.id;
      */
-    db.query("select title as 'job title', role.id as 'role id', " +
-        "department.name as 'department name', salary from role " +
-        "join department on role.department_id = department.id;",
+    const SQL_query = "select title as 'job title', " +
+        "role.id as 'role id', " +
+        "department.name as 'department name', " +
+        "salary from role " +
+        "join department on role.department_id = department.id;"
+    db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
             console.table(results);
@@ -168,22 +172,32 @@ function process_department_name_answer(answer) {
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
-            console.log ("Department " + department_name +
+            console.log("Department " + department_name +
                 " added.");
-            top_level_choice();
+            const SQL_query = "select id from department " +
+                "where name = '" + safe_department_name + "';";
+            db.query(SQL_query,
+                function (err, results) {
+                    if (err) { throw err; };
+                    console.log("Id of department " +
+                        department_name + " is " + results[0].id +
+                        ".");
+                    top_level_choice();
+                }
+            )
         }
     )
-}
+};
 
 function do_add_a_role() {
-            top_level_choice();
-        }
+    top_level_choice();
+}
 
 function do_add_an_employee() {
-            top_level_choice();
-        }
+    top_level_choice();
+}
 
 function do_update_an_employee_role() {
-            top_level_choice();
-        }
+    top_level_choice();
+}
 top_level_choice();

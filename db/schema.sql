@@ -4,7 +4,8 @@ use employee_tracker_db;
 
 create table department (
 	id int auto_increment primary key,
-	name varchar(40)
+	name varchar(40),
+	unique (name)
 );
 
 create table role (
