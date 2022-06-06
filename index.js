@@ -114,7 +114,8 @@ function do_view_all_roles() {
         "role.id as 'role id', " +
         "department.name as 'department name', " +
         "salary from role " +
-        "join department on role.department_id = department.id;"
+        "join department on role.department_id = department.id" +
+        " order by role.id;"
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
@@ -171,7 +172,12 @@ function process_department_name_answer(answer) {
         " values ('" + safe_department_name + "');";
     db.query(SQL_query,
         function (err, results) {
-            if (err) { throw err; };
+            if (err) { 
+                console.log ("There is already a department " +
+                " named " + department_name + ".");
+                top_level_choice();
+                return;
+            }
             console.log("Department " + department_name +
                 " added.");
             const SQL_query = "select id from department " +
