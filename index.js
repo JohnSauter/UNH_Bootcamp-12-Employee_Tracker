@@ -4,6 +4,7 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const console_table = require("console.table");
+const quotation_mark = RegExp("'", "g");
 
 let connection_open = 0;
 /* Connect to the database.  */
@@ -165,7 +166,6 @@ function process_department_name_answer(answer) {
     const department_name = answer.department_name;
     /* insert into department (name) 
      * values ("<department_name>"); */
-    const quotation_mark = RegExp("'", "g");
     const safe_department_name = department_name.replace(quotation_mark, "''");
     const SQL_query = "insert into department (name)" +
         " values ('" + safe_department_name + "');";
@@ -190,7 +190,74 @@ function process_department_name_answer(answer) {
 };
 
 function do_add_a_role() {
-    top_level_choice();
+    /* Ask the user for the name, salary and title
+     * of the role  */
+    const role_questions = [
+        {
+            type: "input",
+            name: "role_name",
+            message: "What is the name of the role?",
+            default: "none"
+        },
+        {
+            type: "input",
+            name: "salary",
+            message: "What is the salary for the role?",
+            default: "0"
+        },
+        {
+            type: "input",
+            name: "department_name",
+            message: "In what department is the role?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(role_questions)
+        .then(process_role_answers_1);
+}
+
+function process_role_answers_1(answers) {
+    const department_name = answers.department_name;
+    const safe_department_name = department_name.replace(quotation_mark, "''");
+    /* Convert department name into department id
+     * and add it to answers.  */
+    const SQL_query = "select id from department where " +
+        "department.name = '" + safe_department_name + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log(results);
+            if (results.length == 0) {
+                console.log("There is no department named " +
+                    department_name + ".");
+                top_level_choice();
+                return;
+            }
+            const department_id = results[0].id;
+            answers["department_id"] = department_id;
+            process_role_answers_2(answers);
+        }
+    )
+}
+
+function process_role_answers_2(answers) {
+    const role_name = answers.role_name;
+    const safe_role_name = role_name.replace(quotation_mark, "''");
+    const salary = answers.salary;
+    const safe_salary = salary.replace(quotation_mark, "''");
+    const department_id = answers.department_id;
+    const SQL_query = "insert into role " +
+        "(title, salary, department_id) " +
+        " values ('" + safe_role_name + "', " +
+        "'" + safe_salary + "', " +
+        "'" + department_id + "');";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log("Role " + role_name + " added.");
+            top_level_choice();
+        }
+    )
 }
 
 function do_add_an_employee() {
