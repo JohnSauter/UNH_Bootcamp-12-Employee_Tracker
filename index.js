@@ -226,7 +226,6 @@ function process_role_answers_1(answers) {
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
-            console.log(results);
             if (results.length == 0) {
                 console.log("There is no department named " +
                     department_name + ".");
@@ -303,7 +302,6 @@ function process_employee_answers_1(answers) {
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
-            console.log(results);
             if (results.length == 0) {
                 console.log("There is no role entitled " +
                     title + ".");
@@ -328,7 +326,6 @@ function process_employee_answers_2(answers) {
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
-            console.log(results);
             if (results.length == 0) {
                 console.log("There is no manager named " +
                     manager_name + ".");
@@ -367,7 +364,101 @@ function process_employee_answers_3(answers) {
 }
 
 function do_update_an_employee_role() {
-    top_level_choice();
+    const employee_update_questions = [
+        {
+            type: "input",
+            name: "employee_first_name",
+            message: "What is the first name of the employee?",
+            default: "none"
+        },
+        {
+            type: "input",
+            name: "employee_last_name",
+            message: "What is the last name of the employee?",
+            default: "none"
+        },
+        {
+            type: "input",
+            name: "title",
+            message: "What is the new role (new title) of the employee?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(employee_update_questions)
+        .then(process_employee_update_answers_1);
 }
+function process_employee_update_answers_1(answers) {
+    const title = answers.title;
+    const safe_title = title.replace(quotation_mark, "''");
+    /* Convert title into role id
+     * and add it to answers.  */
+    const SQL_query = "select id from role where " +
+        "role.title = '" + safe_title + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no role entitled " +
+                    title + ".");
+                top_level_choice();
+                return;
+            }
+            const role_id = results[0].id;
+            answers["role_id"] = role_id;
+            process_employee_update_answers_2(answers);
+        }
+    )
+}
+
+function process_employee_update_answers_2(answers) {
+    const employee_first_name = answers.employee_first_name;
+    const safe_employee_first_name = employee_first_name.replace(quotation_mark, "''");
+    const employee_last_name = answers.employee_last_name;
+    const safe_employee_last_name = employee_last_name.replace(quotation_mark, "''");
+    /* Convert employee name into employee id
+     * and add it to answers.  */
+    const SQL_query = "select id from employee where " +
+        "employee.first_name = '" + safe_employee_first_name +
+        "' and employee.last_name = '" + safe_employee_last_name +
+        "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no employee named " +
+                    employee_first_name + " " +
+                    employee_last_name + ".");
+                top_level_choice();
+                return;
+            }
+            const manager_id = results[0].id;
+            answers["manager_id"] = manager_id;
+            process_employee_update_answers_3(answers);
+        }
+    )
+}
+
+function process_employee_update_answers_3(answers) {
+    const first_name = answers.employee_first_name;
+    const safe_first_name = first_name.replace(quotation_mark, "''");
+    const last_name = answers.employee_last_name;
+    const safe_last_name = last_name.replace(quotation_mark, "''");
+    const role_id = answers.role_id;
+
+    const SQL_query = "update employee " +
+        "set role_id = '" + role_id + "' " +
+        "where employee.first_name = '" + safe_first_name + "'" +
+        " and employee.last_name = '" + safe_last_name + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log("Employee " + first_name +
+                " " + last_name + " updated.");
+            top_level_choice();
+        }
+    )
+}
+
+
 /* We start by asking the user what he wants to do.  */
 top_level_choice();
