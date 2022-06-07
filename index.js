@@ -44,6 +44,9 @@ function top_level_choice() {
                 "update an employee manager",
                 "view employees by manager",
                 "view employees by department",
+                "delete department",
+                "delete role",
+                "delete employee",
                 "exit"
             ],
             default: "exit"
@@ -100,6 +103,18 @@ function process_choice_answer(answer) {
 
         case "view employees by department":
             do_view_employees_by_department();
+            break;
+
+        case "delete department":
+            do_delete_department();
+            break;
+
+        case "delete role":
+            do_delete_role();
+            break;
+
+        case "delete employee":
+            do_delete_employee();
             break;
 
         case "exit":
@@ -159,8 +174,8 @@ function do_view_all_employees() {
         "concat (manager.first_name, space(1), manager.last_name) " +
         " as 'manager name' " +
         "from employee " +
-        "join role on employee.role_id = role.id " +
-        " join department on role.department_id = department.id " +
+        " left join role on employee.role_id = role.id " +
+        " left join department on role.department_id = department.id " +
         " left join employee as manager " +
         "on employee.manager_id = manager.id " +
         "order by employee.id;";
@@ -647,6 +662,173 @@ function do_view_employees_by_department() {
         }
     )
 };
+
+function do_delete_department() {
+    const department_question = [
+        {
+            type: "input",
+            name: "department_name",
+            message: "Which department would you like to delete?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(department_question)
+        .then(process_delete_department_answer_1);
+}
+
+function process_delete_department_answer_1(answers) {
+    const department_name = answers.department_name;
+    const safe_department_name = department_name.replace(quotation_mark, "''");
+
+    /* Find the department's id and add it to answers.  */
+    const SQL_query = "select id from department where " +
+        "department.name = '" + safe_department_name + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no department named " +
+                    department_name + ".");
+                top_level_choice();
+                return;
+            }
+            const department_id = results[0].id;
+            answers["department_id"] = department_id;
+            process_delete_department_answer_2(answers);
+        }
+    )
+}
+
+
+function process_delete_department_answer_2(answers) {
+    const department_name = answers.department_name;
+    const department_id = answers.department_id;
+
+    const SQL_query = "delete from department " +
+        "where department.id = '" + department_id + "';"
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log("Department " + department_name +
+                " deleted.");
+            top_level_choice();
+        }
+    )
+}
+
+function do_delete_role() {
+    const role_question = [
+        {
+            type: "input",
+            name: "title",
+            message: "Which role (title) would you like to delete?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(role_question)
+        .then(process_delete_role_answer_1);
+}
+
+function process_delete_role_answer_1(answers) {
+    const title = answers.title;
+    const safe_title = title.replace(quotation_mark, "''");
+
+    /* Find the role's id and add it to answers.  */
+    const SQL_query = "select id from role where " +
+        "role.title = '" + safe_title + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no role (title) named " +
+                    title + ".");
+                top_level_choice();
+                return;
+            }
+            const role_id = results[0].id;
+            answers["role_id"] = role_id;
+            process_delete_role_answer_2(answers);
+        }
+    )
+}
+
+function process_delete_role_answer_2(answers) {
+    const title = answers.title;
+    const role_id = answers.role_id;
+
+    const SQL_query = "delete from role " +
+        "where role.id = '" + role_id + "';"
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log("Role (title) " + title +
+                " deleted.");
+            top_level_choice();
+        }
+    )
+}
+
+function do_delete_employee() {
+    const employee_questions = [
+        {
+            type: "input",
+            name: "first_name",
+            message: "What is the first name of the employee to be deleted?",
+            default: "none"
+        },
+        {
+            type: "input",
+            name: "last_name",
+            message: "What is the last name of the employee to be deleted?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(employee_questions)
+        .then(process_delete_employee_answers_1);
+}
+
+function process_delete_employee_answers_1(answers) {
+    const first_name = answers.first_name;
+    const safe_first_name = first_name.replace(quotation_mark, "''");
+    const last_name = answers.last_name;
+    const safe_last_name = last_name.replace(quotation_mark, "''");
+
+    /* Find the employee's id and add it to answers.  */
+    const SQL_query = "select id from employee where " +
+        "employee.first_name = '" + safe_first_name + "' and " +
+        "employee.last_name = '" + safe_last_name + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no employee named " +
+                    first_name + " " + last_name + ".");
+                top_level_choice();
+                return;
+            }
+            const employee_id = results[0].id;
+            answers["employee_id"] = employee_id;
+            process_delete_employee_answer_2(answers);
+        }
+    )
+}
+
+function process_delete_employee_answer_2(answers) {
+    const first_name = answers.first_name;
+    const last_name = answers.last_name;
+    const employee_id = answers.employee_id;
+
+    const SQL_query = "delete from employee " +
+        "where employee.id = '" + employee_id + "';"
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log("Employee " + first_name + " " +
+                last_name + " deleted.");
+            top_level_choice();
+        }
+    )
+}
 
 /* We start by asking the user what he wants to do.  */
 top_level_choice();
