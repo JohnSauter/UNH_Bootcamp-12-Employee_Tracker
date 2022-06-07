@@ -43,6 +43,7 @@ function top_level_choice() {
                 "update an employee role",
                 "update an employee manager",
                 "view employees by manager",
+                "view employees by department",
                 "exit"
             ],
             default: "exit"
@@ -95,6 +96,10 @@ function process_choice_answer(answer) {
 
         case "view employees by manager":
             do_view_employees_by_manager();
+            break;
+
+        case "view employees by department":
+            do_view_employees_by_department();
             break;
 
         case "exit":
@@ -608,7 +613,32 @@ function do_view_employees_by_manager() {
         " join department on role.department_id = department.id " +
         " left join employee as manager " +
         "on employee.manager_id = manager.id " +
-        "order by manager.id;"
+        "order by manager.id, employee.id;"
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.table(results);
+            top_level_choice();
+        }
+    )
+};
+
+function do_view_employees_by_department() {
+    const SQL_query =
+        "select employee.id as 'employee id', " +
+        "employee.first_name as 'first name', " +
+        "employee.last_name as 'last name', " +
+        "role.title as 'job title', " +
+        "department.name as 'department', " +
+        "role.salary as salary, " +
+        "concat (manager.first_name, space(1), manager.last_name) " +
+        " as 'manager name' " +
+        "from employee " +
+        "join role on employee.role_id = role.id " +
+        " join department on role.department_id = department.id " +
+        " left join employee as manager " +
+        "on employee.manager_id = manager.id " +
+        "order by department.id, employee.id;"
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
