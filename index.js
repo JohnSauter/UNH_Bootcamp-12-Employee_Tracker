@@ -41,6 +41,7 @@ function top_level_choice() {
                 "add a role",
                 "add an employee",
                 "update an employee role",
+                "update an employee manager",
                 "exit"
             ],
             default: "exit"
@@ -62,24 +63,35 @@ function process_choice_answer(answer) {
         case "view all departments":
             do_view_all_departments();
             break;
+
         case "view all roles":
             do_view_all_roles();
             break;
+
         case "view all employees":
             do_view_all_employees();
             break;
+
         case "add a department":
             do_add_a_department();
             break;
+
         case "add a role":
             do_add_a_role();
             break;
+
         case "add an employee":
             do_add_an_employee();
             break;
+
         case "update an employee role":
             do_update_an_employee_role();
             break;
+
+        case "update an employee manager":
+            do_update_an_employee_manager();
+            break;
+
         case "exit":
             if (connection_open == 1) {
                 db.end();
@@ -87,6 +99,7 @@ function process_choice_answer(answer) {
                 connection_open = 0;
             }
             break;
+
         default:
             break;
     }
@@ -172,9 +185,9 @@ function process_department_name_answer(answer) {
         " values ('" + safe_department_name + "');";
     db.query(SQL_query,
         function (err, results) {
-            if (err) { 
-                console.log ("There is already a department " +
-                " named " + department_name + ".");
+            if (err) {
+                console.log("There is already a department " +
+                    " named " + department_name + ".");
                 top_level_choice();
                 return;
             }
@@ -391,9 +404,10 @@ function do_update_an_employee_role() {
         }
     ];
     inquirer.prompt(employee_update_questions)
-        .then(process_employee_update_answers_1);
+        .then(process_employee_update_role_answers_1);
 }
-function process_employee_update_answers_1(answers) {
+
+function process_employee_update_role_answers_1(answers) {
     const title = answers.title;
     const safe_title = title.replace(quotation_mark, "''");
     /* Convert title into role id
@@ -411,12 +425,12 @@ function process_employee_update_answers_1(answers) {
             }
             const role_id = results[0].id;
             answers["role_id"] = role_id;
-            process_employee_update_answers_2(answers);
+            process_employee_update_role_answers_2(answers);
         }
     )
 }
 
-function process_employee_update_answers_2(answers) {
+function process_employee_update_role_answers_2(answers) {
     const employee_first_name = answers.employee_first_name;
     const safe_employee_first_name = employee_first_name.replace(quotation_mark, "''");
     const employee_last_name = answers.employee_last_name;
@@ -439,12 +453,12 @@ function process_employee_update_answers_2(answers) {
             }
             const manager_id = results[0].id;
             answers["manager_id"] = manager_id;
-            process_employee_update_answers_3(answers);
+            process_employee_update_role_answers_3(answers);
         }
     )
 }
 
-function process_employee_update_answers_3(answers) {
+function process_employee_update_role_answers_3(answers) {
     const first_name = answers.employee_first_name;
     const safe_first_name = first_name.replace(quotation_mark, "''");
     const last_name = answers.employee_last_name;
@@ -453,6 +467,115 @@ function process_employee_update_answers_3(answers) {
 
     const SQL_query = "update employee " +
         "set role_id = '" + role_id + "' " +
+        "where employee.first_name = '" + safe_first_name + "'" +
+        " and employee.last_name = '" + safe_last_name + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.log("Employee " + first_name +
+                " " + last_name + " updated.");
+            top_level_choice();
+        }
+    )
+}
+
+////
+function do_update_an_employee_manager() {
+    const employee_update_questions = [
+        {
+            type: "input",
+            name: "employee_first_name",
+            message: "What is the first name of the employee?",
+            default: "none"
+        },
+        {
+            type: "input",
+            name: "employee_last_name",
+            message: "What is the last name of the employee?",
+            default: "none"
+        },
+        {
+            type: "input",
+            name: "manager_first_name",
+            message: "What is the first name of the employee's new manager?",
+            default: "none"
+        },
+        {
+            type: "input",
+            name: "manager_last_name",
+            message: "What is the last name of the employee's new manager?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(employee_update_questions)
+        .then(process_employee_update_manager_answers_1);
+}
+
+function process_employee_update_manager_answers_1(answers) {
+    const manager_first_name = answers.manager_first_name;
+    const safe_manager_first_name = manager_first_name.replace(quotation_mark, "''");
+    const manager_last_name = answers.manager_last_name;
+    const safe_manager_last_name = manager_last_name.replace(quotation_mark, "''");
+    
+    /* Find the new manager's employee id and add it to answers.  */
+    const SQL_query = "select id from employee where " +
+        "employee.first_name = '" + safe_manager_first_name +
+        "' and employee.last_name = '" + safe_manager_last_name +
+        "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no manager named " +
+                    manager_first_name + " " + 
+                    manager_last_name + ".");
+                top_level_choice();
+                return;
+            }
+            const manager_id = results[0].id;
+            answers["manager_id"] = manager_id;
+            process_employee_update_manager_answers_2(answers);
+        }
+    )
+}
+
+function process_employee_update_manager_answers_2(answers) {
+    const employee_first_name = answers.employee_first_name;
+    const safe_employee_first_name = employee_first_name.replace(quotation_mark, "''");
+    const employee_last_name = answers.employee_last_name;
+    const safe_employee_last_name = employee_last_name.replace(quotation_mark, "''");
+    /* Convert employee name into employee id
+     * and add it to answers.  */
+    const SQL_query = "select id from employee where " +
+        "employee.first_name = '" + safe_employee_first_name +
+        "' and employee.last_name = '" + safe_employee_last_name +
+        "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no employee named " +
+                    employee_first_name + " " +
+                    employee_last_name + ".");
+                top_level_choice();
+                return;
+            }
+            const employee_id = results[0].id;
+            answers["employee_id"] = employee_id;
+            process_employee_update_manager_answers_3(answers);
+        }
+    )
+}
+
+function process_employee_update_manager_answers_3(answers) {
+    const first_name = answers.employee_first_name;
+    const safe_first_name = first_name.replace(quotation_mark, "''");
+    const last_name = answers.employee_last_name;
+    const safe_last_name = last_name.replace(quotation_mark, "''");
+    const manager_id = answers.manager_id;
+
+    const SQL_query = "update employee " +
+        "set manager_id = '" + manager_id + "' " +
         "where employee.first_name = '" + safe_first_name + "'" +
         " and employee.last_name = '" + safe_last_name + "';";
     db.query(SQL_query,
