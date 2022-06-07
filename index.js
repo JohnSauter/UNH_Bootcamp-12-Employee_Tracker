@@ -42,6 +42,7 @@ function top_level_choice() {
                 "add an employee",
                 "update an employee role",
                 "update an employee manager",
+                "view employees by manager",
                 "exit"
             ],
             default: "exit"
@@ -90,6 +91,10 @@ function process_choice_answer(answer) {
 
         case "update an employee manager":
             do_update_an_employee_manager();
+            break;
+
+        case "view employees by manager":
+            do_view_employees_by_manager();
             break;
 
         case "exit":
@@ -152,7 +157,8 @@ function do_view_all_employees() {
         "join role on employee.role_id = role.id " +
         " join department on role.department_id = department.id " +
         " left join employee as manager " +
-        "on employee.manager_id = manager.id;";
+        "on employee.manager_id = manager.id " +
+        "order by employee.id;";
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
@@ -479,7 +485,6 @@ function process_employee_update_role_answers_3(answers) {
     )
 }
 
-////
 function do_update_an_employee_manager() {
     const employee_update_questions = [
         {
@@ -516,7 +521,7 @@ function process_employee_update_manager_answers_1(answers) {
     const safe_manager_first_name = manager_first_name.replace(quotation_mark, "''");
     const manager_last_name = answers.manager_last_name;
     const safe_manager_last_name = manager_last_name.replace(quotation_mark, "''");
-    
+
     /* Find the new manager's employee id and add it to answers.  */
     const SQL_query = "select id from employee where " +
         "employee.first_name = '" + safe_manager_first_name +
@@ -527,7 +532,7 @@ function process_employee_update_manager_answers_1(answers) {
             if (err) { throw err; };
             if (results.length == 0) {
                 console.log("There is no manager named " +
-                    manager_first_name + " " + 
+                    manager_first_name + " " +
                     manager_last_name + ".");
                 top_level_choice();
                 return;
@@ -588,6 +593,30 @@ function process_employee_update_manager_answers_3(answers) {
     )
 }
 
+function do_view_employees_by_manager() {
+    const SQL_query =
+        "select employee.id as 'employee id', " +
+        "employee.first_name as 'first name', " +
+        "employee.last_name as 'last name', " +
+        "role.title as 'job title', " +
+        "department.name as 'department', " +
+        "role.salary as salary, " +
+        "concat (manager.first_name, space(1), manager.last_name) " +
+        " as 'manager name' " +
+        "from employee " +
+        "join role on employee.role_id = role.id " +
+        " join department on role.department_id = department.id " +
+        " left join employee as manager " +
+        "on employee.manager_id = manager.id " +
+        "order by manager.id;"
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.table(results);
+            top_level_choice();
+        }
+    )
+};
 
 /* We start by asking the user what he wants to do.  */
 top_level_choice();
