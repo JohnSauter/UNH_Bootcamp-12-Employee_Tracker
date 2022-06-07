@@ -47,6 +47,7 @@ function top_level_choice() {
                 "delete department",
                 "delete role",
                 "delete employee",
+                "view department budget",
                 "exit"
             ],
             default: "exit"
@@ -115,6 +116,10 @@ function process_choice_answer(answer) {
 
         case "delete employee":
             do_delete_employee();
+            break;
+
+        case "view department budget":
+            do_view_department_budget();
             break;
 
         case "exit":
@@ -828,7 +833,64 @@ function process_delete_employee_answer_2(answers) {
             top_level_choice();
         }
     )
-}
+};
 
+
+function do_view_department_budget() {
+    const department_question = [
+        {
+            type: "input",
+            name: "department_name",
+            message: "For which department do you wish to view the budget?",
+            default: "none"
+        }
+    ];
+    inquirer.prompt(department_question)
+        .then(process_view_department_budget_answer_1);
+
+
+    function process_view_department_budget_answer_1(answers) {
+        const department_name = answers.department_name;
+        const safe_department_name = department_name.replace(quotation_mark, "''");
+
+        /* Find the department id and add it to answers.  */
+        const SQL_query = "select id from department where " +
+            "department.name = '" + safe_department_name + "';";
+        db.query(SQL_query,
+            function (err, results) {
+                if (err) { throw err; };
+                if (results.length == 0) {
+                    console.log("There is no department named " +
+                        department_name + ".");
+                    top_level_choice();
+                    return;
+                }
+                const department_id = results[0].id;
+                answers["department_id"] = department_id;
+                process_view_department_budget_answer_2(answers);
+            }
+        )
+    }
+
+    function process_view_department_budget_answer_2(answers) {
+        const department_name = answers.department_name;
+        const department_id = answers.department_id;
+
+        const SQL_query =
+            "select sum(role.salary) as 'Combined Salaries' " +
+            "from employee " +
+            "join role on employee.role_id = role.id " +
+            "join department on role.department_id = department.id " +
+            "where department.id = '" + department_id + "';";
+        db.query(SQL_query,
+            function (err, results) {
+                if (err) { throw err; };
+                console.table(results);
+                top_level_choice();
+            }
+        )
+    }
+
+}
 /* We start by asking the user what he wants to do.  */
 top_level_choice();
