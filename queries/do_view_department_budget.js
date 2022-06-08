@@ -1,0 +1,67 @@
+/* View department budger requires the department name.  */
+
+let call_back = null;
+let db = null;
+const make_safe = require ("../utilities/make_safe.js");
+const inquirer = require("inquirer");
+
+function do_view_department_budget(the_db, the_call_back) {
+    db = the_db;
+    call_back = the_call_back;
+
+    const department_question = [
+        {
+            type: "input",
+            name: "department_name",
+            message: "For which department do you wish to view the budget?",
+            default: "none"
+        }
+    ];
+
+    inquirer.prompt(department_question)
+        .then(process_view_department_budget_answer_1);
+}
+
+function process_view_department_budget_answer_1(answers) {
+    const department_name = answers.department_name;
+    const safe_department_name = make_safe(department_name);
+
+    /* Find the department id and add it to answers.  */
+    const SQL_query = "select id from department where " +
+        "department.name = '" + safe_department_name + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            if (results.length == 0) {
+                console.log("There is no department named " +
+                    department_name + ".");
+                call_back();
+                return;
+            }
+            const department_id = results[0].id;
+            answers["department_id"] = department_id;
+            process_view_department_budget_answer_2(answers);
+        }
+    )
+}
+
+function process_view_department_budget_answer_2(answers) {
+    const department_id = String(answers.department_id);
+    const safe_department_id = make_safe(department_id);
+
+    const SQL_query =
+        "select sum(role.salary) as 'Combined Salaries' " +
+        "from employee " +
+        "join role on employee.role_id = role.id " +
+        "join department on role.department_id = department.id " +
+        "where department.id = '" + safe_department_id + "';";
+    db.query(SQL_query,
+        function (err, results) {
+            if (err) { throw err; };
+            console.table(results);
+            call_back();
+        }
+    )
+}
+
+module.exports = do_view_department_budget;
