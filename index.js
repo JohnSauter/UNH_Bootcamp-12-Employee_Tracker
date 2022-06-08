@@ -3,8 +3,9 @@
 // Include the packages needed for this application.
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
-const console_table = require("console.table");
-const quotation_mark = RegExp("'", "g");
+const console_table_object = require("console.table");
+
+const make_safe = require ("./utilities/make_safe.js");
 
 let connection_open = 0;
 /* Connect to the database.  */
@@ -67,7 +68,7 @@ function process_choice_answer(answer) {
      */
     switch (answer.choice) {
         case "view all departments":
-            do_view_all_departments();
+            do_view_all_departments(db, top_level_choice);
             break;
 
         case "view all roles":
@@ -136,17 +137,9 @@ function process_choice_answer(answer) {
 }
 
 /* Respond to the user's choice of procedure.  */
-function do_view_all_departments() {
-    const SQL_statement = "select * from department " +
-        "order by id;";
-    db.query(SQL_statement,
-        function (err, results) {
-            if (err) { throw err; };
-            console.table(results);
-            top_level_choice();
-        }
-    )
-}
+
+const do_view_all_departments = require("./queries/do_view_all_departments.js");
+
 
 function do_view_all_roles() {
     /* select title as "job title", role.id as "role id", 
@@ -211,7 +204,7 @@ function process_department_name_answer(answer) {
     const department_name = answer.department_name;
     /* insert into department (name) 
      * values ("<department_name>"); */
-    const safe_department_name = department_name.replace(quotation_mark, "''");
+    const safe_department_name = make_safe(department_name);
     const SQL_query = "insert into department (name)" +
         " values ('" + safe_department_name + "');";
     db.query(SQL_query,
@@ -268,7 +261,7 @@ function do_add_a_role() {
 
 function process_role_answers_1(answers) {
     const department_name = answers.department_name;
-    const safe_department_name = department_name.replace(quotation_mark, "''");
+    const safe_department_name = make_safe(department_name);
     /* Convert department name into department id
      * and add it to answers.  */
     const SQL_query = "select id from department where " +
@@ -291,15 +284,16 @@ function process_role_answers_1(answers) {
 
 function process_role_answers_2(answers) {
     const role_name = answers.role_name;
-    const safe_role_name = role_name.replace(quotation_mark, "''");
+    const safe_role_name = make_safe(role_name);
     const salary = answers.salary;
-    const safe_salary = salary.replace(quotation_mark, "''");
-    const department_id = answers.department_id;
+    const safe_salary = make_safe(salary);
+    const department_id = String(answers.department_id);
+    const safe_department_id = make_safe(department_id);
     const SQL_query = "insert into role " +
         "(title, salary, department_id) " +
         " values ('" + safe_role_name + "', " +
         "'" + safe_salary + "', " +
-        "'" + department_id + "');";
+        "'" + safe_department_id + "');";
     db.query(SQL_query,
         function (err, results) {
             if (err) { throw err; };
@@ -344,7 +338,7 @@ function do_add_an_employee() {
 
 function process_employee_answers_1(answers) {
     const title = answers.title;
-    const safe_title = title.replace(quotation_mark, "''");
+    const safe_title = make_safe(title);
     /* Convert title into role id
      * and add it to answers.  */
     const SQL_query = "select id from role where " +
@@ -367,7 +361,7 @@ function process_employee_answers_1(answers) {
 
 function process_employee_answers_2(answers) {
     const manager_name = answers.manager_name;
-    const safe_manager_name = manager_name.replace(quotation_mark, "''");
+    const safe_manager_name = make_safe(manager_name);
     /* Convert manager name into employee id
      * and add it to answers.  */
     const SQL_query = "select id from employee where " +
@@ -391,9 +385,9 @@ function process_employee_answers_2(answers) {
 
 function process_employee_answers_3(answers) {
     const first_name = answers.first_name;
-    const safe_first_name = first_name.replace(quotation_mark, "''");
+    const safe_first_name = make_safe(first_name);
     const last_name = answers.last_name;
-    const safe_last_name = last_name.replace(quotation_mark, "''");
+    const safe_last_name = make_safe(last_name);
     const role_id = answers.role_id;
     const manager_id = answers.manager_id;
 
@@ -440,7 +434,7 @@ function do_update_an_employee_role() {
 
 function process_employee_update_role_answers_1(answers) {
     const title = answers.title;
-    const safe_title = title.replace(quotation_mark, "''");
+    const safe_title = make_safe(title);
     /* Convert title into role id
      * and add it to answers.  */
     const SQL_query = "select id from role where " +
@@ -463,9 +457,9 @@ function process_employee_update_role_answers_1(answers) {
 
 function process_employee_update_role_answers_2(answers) {
     const employee_first_name = answers.employee_first_name;
-    const safe_employee_first_name = employee_first_name.replace(quotation_mark, "''");
+    const safe_employee_first_name = make_safe(employee_first_name);
     const employee_last_name = answers.employee_last_name;
-    const safe_employee_last_name = employee_last_name.replace(quotation_mark, "''");
+    const safe_employee_last_name = make_safe(employee_last_name);
     /* Convert employee name into employee id
      * and add it to answers.  */
     const SQL_query = "select id from employee where " +
@@ -491,9 +485,9 @@ function process_employee_update_role_answers_2(answers) {
 
 function process_employee_update_role_answers_3(answers) {
     const first_name = answers.employee_first_name;
-    const safe_first_name = first_name.replace(quotation_mark, "''");
+    const safe_first_name = make_safe(first_name);
     const last_name = answers.employee_last_name;
-    const safe_last_name = last_name.replace(quotation_mark, "''");
+    const safe_last_name = make_safe(last_name);
     const role_id = answers.role_id;
 
     const SQL_query = "update employee " +
@@ -543,9 +537,9 @@ function do_update_an_employee_manager() {
 
 function process_employee_update_manager_answers_1(answers) {
     const manager_first_name = answers.manager_first_name;
-    const safe_manager_first_name = manager_first_name.replace(quotation_mark, "''");
+    const safe_manager_first_name = make_safe(manager_first_name);
     const manager_last_name = answers.manager_last_name;
-    const safe_manager_last_name = manager_last_name.replace(quotation_mark, "''");
+    const safe_manager_last_name = make_safe(manager_last_name);
 
     /* Find the new manager's employee id and add it to answers.  */
     const SQL_query = "select id from employee where " +
@@ -571,9 +565,9 @@ function process_employee_update_manager_answers_1(answers) {
 
 function process_employee_update_manager_answers_2(answers) {
     const employee_first_name = answers.employee_first_name;
-    const safe_employee_first_name = employee_first_name.replace(quotation_mark, "''");
+    const safe_employee_first_name = make_safe(employee_first_name);
     const employee_last_name = answers.employee_last_name;
-    const safe_employee_last_name = employee_last_name.replace(quotation_mark, "''");
+    const safe_employee_last_name = make_safe(employee_last_name);
     /* Convert employee name into employee id
      * and add it to answers.  */
     const SQL_query = "select id from employee where " +
@@ -599,13 +593,14 @@ function process_employee_update_manager_answers_2(answers) {
 
 function process_employee_update_manager_answers_3(answers) {
     const first_name = answers.employee_first_name;
-    const safe_first_name = first_name.replace(quotation_mark, "''");
+    const safe_first_name = make_safe(first_name);
     const last_name = answers.employee_last_name;
-    const safe_last_name = last_name.replace(quotation_mark, "''");
+    const safe_last_name = make_safe(last_name);
     const manager_id = answers.manager_id;
+    const safe_manager_id = make_safe(manager_id);
 
     const SQL_query = "update employee " +
-        "set manager_id = '" + manager_id + "' " +
+        "set manager_id = '" + safe_manager_id + "' " +
         "where employee.first_name = '" + safe_first_name + "'" +
         " and employee.last_name = '" + safe_last_name + "';";
     db.query(SQL_query,
@@ -629,9 +624,9 @@ function do_view_employees_by_manager() {
         "concat (manager.first_name, space(1), manager.last_name) " +
         " as 'manager name' " +
         "from employee " +
-        "join role on employee.role_id = role.id " +
-        " join department on role.department_id = department.id " +
-        " left join employee as manager " +
+        "left join role on employee.role_id = role.id " +
+        "left join department on role.department_id = department.id " +
+        "left join employee as manager " +
         "on employee.manager_id = manager.id " +
         "order by manager.id, employee.id;"
     db.query(SQL_query,
@@ -654,9 +649,9 @@ function do_view_employees_by_department() {
         "concat (manager.first_name, space(1), manager.last_name) " +
         " as 'manager name' " +
         "from employee " +
-        "join role on employee.role_id = role.id " +
-        " join department on role.department_id = department.id " +
-        " left join employee as manager " +
+        "left join role on employee.role_id = role.id " +
+        "left join department on role.department_id = department.id " +
+        "left join employee as manager " +
         "on employee.manager_id = manager.id " +
         "order by department.id, employee.id;"
     db.query(SQL_query,
@@ -683,7 +678,7 @@ function do_delete_department() {
 
 function process_delete_department_answer_1(answers) {
     const department_name = answers.department_name;
-    const safe_department_name = department_name.replace(quotation_mark, "''");
+    const safe_department_name = make_safe(department_name);
 
     /* Find the department's id and add it to answers.  */
     const SQL_query = "select id from department where " +
@@ -736,7 +731,7 @@ function do_delete_role() {
 
 function process_delete_role_answer_1(answers) {
     const title = answers.title;
-    const safe_title = title.replace(quotation_mark, "''");
+    const safe_title = make_safe(title);
 
     /* Find the role's id and add it to answers.  */
     const SQL_query = "select id from role where " +
@@ -794,9 +789,9 @@ function do_delete_employee() {
 
 function process_delete_employee_answers_1(answers) {
     const first_name = answers.first_name;
-    const safe_first_name = first_name.replace(quotation_mark, "''");
+    const safe_first_name = make_safe(first_name);
     const last_name = answers.last_name;
-    const safe_last_name = last_name.replace(quotation_mark, "''");
+    const safe_last_name = make_safe(last_name);
 
     /* Find the employee's id and add it to answers.  */
     const SQL_query = "select id from employee where " +
@@ -851,7 +846,7 @@ function do_view_department_budget() {
 
     function process_view_department_budget_answer_1(answers) {
         const department_name = answers.department_name;
-        const safe_department_name = department_name.replace(quotation_mark, "''");
+        const safe_department_name = make_safe(department_name);
 
         /* Find the department id and add it to answers.  */
         const SQL_query = "select id from department where " +
