@@ -22,7 +22,7 @@ node index.js
 
 ## Walkthrough Video
 
-TODO
+https://github.com/JohnSauter/UNH_Bootcamp-12-Employee_Tracker/blob/main/videos/Walkthrough.mp4
 
 ## License
 
