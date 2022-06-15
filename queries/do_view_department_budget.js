@@ -1,4 +1,4 @@
-/* View department budger requires the department name.  */
+/* View department budget requires the department name.  */
 
 let call_back = null;
 let db = null;

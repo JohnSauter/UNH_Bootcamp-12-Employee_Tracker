@@ -90,10 +90,11 @@ function process_employee_update_role_answers_3(answers) {
     const safe_first_name = make_safe(first_name);
     const last_name = answers.employee_last_name;
     const safe_last_name = make_safe(last_name);
-    const role_id = answers.role_id;
+    const role_id = String(answers.role_id);
+    const safe_role_id = make_safe(role_id);
 
     const SQL_query = "update employee " +
-        "set role_id = '" + role_id + "' " +
+        "set role_id = '" + safe_role_id + "' " +
         "where employee.first_name = '" + safe_first_name + "'" +
         " and employee.last_name = '" + safe_last_name + "';";
     db.query(SQL_query,
